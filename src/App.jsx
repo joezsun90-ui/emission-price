@@ -218,8 +218,13 @@ function GoogleMapView({ stations }) {
   );
 }
 
+function getZipFromPath() {
+  const pathZip = window.location.pathname.replace("/", "").trim();
+  return /^[0-9]{5}$/.test(pathZip) ? pathZip : "30024";
+}
+
 export default function App() {
-  const [zip, setZip] = useState("30024");
+  const [zip, setZip] = useState(getZipFromPath());
   const [sortBy, setSortBy] = useState("price");
   const [showReport, setShowReport] = useState(false);
   const [stations, setStations] = useState(seedStations);
@@ -227,6 +232,18 @@ export default function App() {
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState(isSupabaseEnabled ? "Supabase" : "Demo data");
+
+  useEffect(() => {
+    document.title = `Cheapest emission test near ${zip} | EmissionPrice`;
+    const description = `Compare emission test prices near ${zip}. Find cheap emissions testing stations, cash prices, card prices, and directions.`;
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement("meta");
+      metaDescription.setAttribute("name", "description");
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute("content", description);
+  }, [zip]);
 
   useEffect(() => {
     async function loadStations() {
@@ -350,15 +367,26 @@ export default function App() {
       <main className="mx-auto max-w-7xl px-4 py-8">
         <section className="grid gap-6 lg:grid-cols-[1.2fr_.8fr]">
           <div className="rounded-3xl bg-white p-6 shadow-sm md:p-10">
-            <div className="mb-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">Georgia MVP Demo</div>
-            <h1 className="text-4xl font-bold tracking-tight md:text-6xl">Find the cheapest emission test near you.</h1>
+            <div className="mb-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">Emission prices near {zip}</div>
+            <h1 className="text-4xl font-bold tracking-tight md:text-6xl">Find the cheapest emission test near {zip}.</h1>
             <p className="mt-4 max-w-2xl text-lg text-slate-600">Compare local emission test prices by ZIP code. See cash price, card price, distance, and last updated time.</p>
             <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:flex-row">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-3 text-slate-400">🔎</span>
                 <input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="Enter ZIP code, e.g. 30024" className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 outline-none focus:ring-2 focus:ring-slate-900" />
               </div>
-              <button className="rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-700">Search</button>
+              <button
+                onClick={() => {
+                  const cleanZip = zip.trim();
+                  if (/^[0-9]{5}$/.test(cleanZip)) {
+                    window.history.pushState({}, "", `/${cleanZip}`);
+                    document.title = `Cheapest emission test near ${cleanZip} | EmissionPrice`;
+                  }
+                }}
+                className="rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-700"
+              >
+                Search
+              </button>
             </div>
           </div>
 
