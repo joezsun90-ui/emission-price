@@ -79,7 +79,8 @@ async function fetchStationsFromSupabase() {
 async function insertPriceReportToSupabase(report) {
   const payload = {
     station_id: report.stationId,
-    reported_price: report.reportedPrice,
+    reported_cash_price: report.reportedCashPrice,
+    reported_card_price: report.reportedCardPrice,
   };
 
   const response = await fetch(`${SUPABASE_URL}/rest/v1/price_reports`, {
@@ -93,9 +94,12 @@ async function insertPriceReportToSupabase(report) {
   return rows[0];
 }
 
-async function fetchMatchingPriceReports(stationId, reportedPrice) {
+async function fetchMatchingPriceReports(stationId, reportedCashPrice, reportedCardPrice) {
+  const cashFilter = reportedCashPrice === null || reportedCashPrice === undefined ? "reported_cash_price=is.null" : `reported_cash_price=eq.${reportedCashPrice}`;
+  const cardFilter = reportedCardPrice === null || reportedCardPrice === undefined ? "reported_card_price=is.null" : `reported_card_price=eq.${reportedCardPrice}`;
+
   const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/price_reports?select=*&station_id=eq.${stationId}&reported_price=eq.${reportedPrice}`,
+    `${SUPABASE_URL}/rest/v1/price_reports?select=*&station_id=eq.${stationId}&${cashFilter}&${cardFilter}`,
     { headers: supabaseHeaders }
   );
 
@@ -103,14 +107,18 @@ async function fetchMatchingPriceReports(stationId, reportedPrice) {
   return response.json();
 }
 
-async function updateStationPriceInSupabase(stationId, newPrice) {
+async function updateStationPriceInSupabase(stationId, currentStation, newCashPrice, newCardPrice) {
+  const finalCashPrice = newCashPrice ?? currentStation.cashPrice;
+  const finalCardPrice = newCardPrice ?? currentStation.cardPrice;
+  const finalMainPrice = Math.min(finalCashPrice || 9999, finalCardPrice || 9999);
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/stations?id=eq.${stationId}`, {
     method: "PATCH",
     headers: supabaseHeaders,
     body: JSON.stringify({
-      price: newPrice,
-      cash_price: newPrice,
-      card_price: newPrice,
+      price: finalMainPrice,
+      cash_price: finalCashPrice,
+      card_price: finalCardPrice,
       updated_at: new Date().toISOString(),
     }),
   });
@@ -161,8 +169,9 @@ function StationCard({ station, onReport, isCheapest }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
         <div className="text-slate-600">💵 Cash ${station.cashPrice}</div>
+        <div className="text-slate-600">💳 Card ${station.cardPrice}</div>
         <div className="text-slate-600">⭐ {station.rating}</div>
         <div className="text-slate-600">🕒 {station.updatedAt}</div>
       </div>
@@ -276,7 +285,7 @@ export default function App() {
   const [showReport, setShowReport] = useState(false);
   const [selectedStation, setSelectedStation] = useState(null);
   const [stations, setStations] = useState(seedStations);
-  const [form, setForm] = useState({ price: "" });
+  const [form, setForm] = useState({ cashPrice: "", cardPrice: "" });
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState(isSupabaseEnabled ? "Supabase" : "Demo data");
@@ -347,7 +356,7 @@ export default function App() {
 
   const openReportModal = (station) => {
     setSelectedStation(station);
-    setForm({ price: "" });
+    setForm({ cashPrice: "", cardPrice: "" });
     setFormError("");
     setShowReport(true);
   };
@@ -356,15 +365,24 @@ export default function App() {
     e.preventDefault();
     setFormError("");
 
-    const priceNumber = Number(form.price);
+    const cashPriceNumber = form.cashPrice ? Number(form.cashPrice) : null;
+    const cardPriceNumber = form.cardPrice ? Number(form.cardPrice) : null;
 
     if (!selectedStation) {
       setFormError("Please select a station first.");
       return;
     }
 
-    if (!form.price || Number.isNaN(priceNumber) || priceNumber < 1 || priceNumber > 50) {
-      setFormError("Please enter a valid price between $1 and $50.");
+    if (!form.cashPrice && !form.cardPrice) {
+      setFormError("Please enter cash price, card price, or both.");
+      return;
+    }
+
+    if (
+      (form.cashPrice && (Number.isNaN(cashPriceNumber) || cashPriceNumber < 1 || cashPriceNumber > 50)) ||
+      (form.cardPrice && (Number.isNaN(cardPriceNumber) || cardPriceNumber < 1 || cardPriceNumber > 50))
+    ) {
+      setFormError("Please enter valid prices between $1 and $50.");
       return;
     }
 
@@ -374,13 +392,14 @@ export default function App() {
       if (isSupabaseEnabled) {
         await insertPriceReportToSupabase({
           stationId: selectedStation.id,
-          reportedPrice: priceNumber,
+          reportedCashPrice: cashPriceNumber,
+          reportedCardPrice: cardPriceNumber,
         });
 
-        const matchingReports = await fetchMatchingPriceReports(selectedStation.id, priceNumber);
+        const matchingReports = await fetchMatchingPriceReports(selectedStation.id, cashPriceNumber, cardPriceNumber);
 
         if (matchingReports.length >= 2) {
-          const updatedStation = await updateStationPriceInSupabase(selectedStation.id, priceNumber);
+          const updatedStation = await updateStationPriceInSupabase(selectedStation.id, selectedStation, cashPriceNumber, cardPriceNumber);
           setStations((currentStations) =>
             currentStations.map((station) =>
               station.id === selectedStation.id ? updatedStation : station
@@ -393,8 +412,8 @@ export default function App() {
         }
       }
 
-      setFormError("Thanks! This price needs one more matching report before it updates.");
-      setForm({ price: "" });
+      setFormError("Thanks! We received your report and will update the price after confirmation.");
+      setForm({ cashPrice: "", cardPrice: "" });
     } catch (error) {
       console.error(error);
       setFormError("Could not save this report. Please try again.");
@@ -516,8 +535,11 @@ export default function App() {
               <button type="button" onClick={() => { setShowReport(false); setSelectedStation(null); }} className="rounded-full p-2 hover:bg-slate-100">×</button>
             </div>
             <div className="mt-5 space-y-4">
-              <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="New price, e.g. 18" type="number" min="1" max="50" step="0.01" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
-              <p className="text-sm text-slate-500">Only submit the latest price for this station. The main price updates after 2 matching reports.</p>
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input value={form.cashPrice} onChange={(e) => setForm({ ...form, cashPrice: e.target.value })} placeholder="Cash price, e.g. 18" type="number" min="1" max="50" step="0.01" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
+                <input value={form.cardPrice} onChange={(e) => setForm({ ...form, cardPrice: e.target.value })} placeholder="Card price, e.g. 20" type="number" min="1" max="50" step="0.01" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
+              </div>
+              <p className="text-sm text-slate-500">Submit the latest cash price, card price, or both. We will update the station price after confirmation.</p>
               {formError && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p>}
               <button disabled={loading} className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">{loading ? "Submitting..." : "Submit Price"}</button>
             </div>
