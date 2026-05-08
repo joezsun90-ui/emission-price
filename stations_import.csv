@@ -1,0 +1,11 @@
+name,address,zip,city,distance,price,cash_price,card_price,rating,verified,phone
+Emission First LLC,3833 Buford Dr,30519,Buford,5.20,14.99,14.99,15.99,4.8,TRUE,(678) 714-2223
+Herbert Automotive,3453 Lawrenceville-Suwanee Rd,30024,Suwanee,1.50,18.00,18.00,20.00,4.5,TRUE,(770) 945-1212
+Speedemissions,2144 Buford Hwy,30518,Buford,3.80,20.00,20.00,22.00,4.2,TRUE,(770) 614-4113
+Neighborhood Tire Pros,3210 Lawrenceville-Suwanee Rd,30024,Suwanee,0.80,25.00,25.00,25.00,4.6,TRUE,(770) 932-0222
+Suwanee Service Station,351 Peachtree Industrial Blvd,30024,Suwanee,2.10,25.00,25.00,25.00,4.4,TRUE,(770) 945-4200
+Dekra Emission Check,2780 Lawrenceville-Suwanee Rd,30024,Suwanee,2.50,25.00,25.00,25.00,4.7,TRUE,(770) 271-2224
+Quickie Emissions,1295 Satellite Blvd,30024,Suwanee,3.20,20.00,20.00,22.00,4.1,TRUE,(678) 546-7770
+Express Oil Change,410 W Pike St,30046,Lawrenceville,6.50,25.00,25.00,25.00,4.5,TRUE,(770) 962-9210
+Emissions Plus,1342 Old Peachtree Rd NW,30024,Suwanee,2.90,25.00,25.00,25.00,4.3,TRUE,(770) 814-7221
+Japanese Auto Repair,444-A Old Peachtree Rd NW,30024,Suwanee,3.50,25.00,25.00,25.00,4.9,TRUE,(770) 232-0202

@@ -8,10 +8,40 @@ const isSupabaseEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 const isGoogleMapsEnabled = Boolean(GOOGLE_MAPS_API_KEY);
 
 const seedStations = [
-  { id: 1, name: "Express Emission Test", address: "1246 Buford Hwy Cumming GA 30041", zip: "30041", city: "Cumming", distance: 4.3, price: 20, cashPrice: 20, cardPrice: 22, rating: 3.7, updatedAt: "2 days ago", verified: true, phone: "6789475514" },
-  { id: 2, name: "Quick Emissions Suwanee", address: "Suwanee GA 30024", zip: "30024", city: "Suwanee", distance: 1.6, price: 18, cashPrice: 18, cardPrice: 20, rating: 4.4, updatedAt: "Today", verified: false, phone: "" },
-  { id: 3, name: "Buford Emission Center", address: "Buford GA 30518", zip: "30518", city: "Buford", distance: 6.5, price: 16, cashPrice: 16, cardPrice: 18, rating: 4.3, updatedAt: "Recently", verified: false, phone: "" },
+  { id: 1, name: "Express Emission Test", address: "1246 Buford Hwy Cumming GA 30041", zip: "30041", city: "Cumming", price: 20, cashPrice: 20, cardPrice: 22, rating: 3.7, updatedAt: "2 days ago", verified: true, phone: "6789475514" },
+  { id: 2, name: "Quick Emissions Suwanee", address: "Suwanee GA 30024", zip: "30024", city: "Suwanee", price: 18, cashPrice: 18, cardPrice: 20, rating: 4.4, updatedAt: "Today", verified: false, phone: "" },
+  { id: 3, name: "Buford Emission Center", address: "Buford GA 30518", zip: "30518", city: "Buford", price: 16, cashPrice: 16, cardPrice: 18, rating: 4.3, updatedAt: "Recently", verified: false, phone: "" },
 ];
+
+function calculateMiles(from, to) {
+  if (!from || !to) return null;
+  const earthRadiusMiles = 3958.8;
+  const dLat = toRadians(to.lat - from.lat);
+  const dLng = toRadians(to.lng - from.lng);
+  const lat1 = toRadians(from.lat);
+  const lat2 = toRadians(to.lat);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((earthRadiusMiles * c).toFixed(1));
+}
+
+async function geocodeAddress(address) {
+  if (!isGoogleMapsEnabled || !address) return null;
+  const maps = await loadGoogleMapsScript(GOOGLE_MAPS_API_KEY);
+  const geocoder = new maps.Geocoder();
+  return new Promise((resolve) => {
+    geocoder.geocode({ address }, (results, status) => {
+      if (status === "OK" && results?.[0]) {
+        const location = results[0].geometry.location;
+        resolve({ lat: location.lat(), lng: location.lng() });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
 
 const supabaseHeaders = {
   apikey: SUPABASE_ANON_KEY,
@@ -27,7 +57,6 @@ function mapSupabaseStationToUi(row) {
     address: row.address,
     zip: row.zip || "",
     city: row.city || "",
-    distance: Number(row.distance || 0),
     price: Number(row.price || 0),
     cashPrice: Number(row.cash_price || row.price || 0),
     cardPrice: Number(row.card_price || row.price || 0),
@@ -47,27 +76,46 @@ async function fetchStationsFromSupabase() {
   return rows.map(mapSupabaseStationToUi);
 }
 
-async function insertStationToSupabase(station) {
+async function insertPriceReportToSupabase(report) {
   const payload = {
-    name: station.name,
-    address: station.address,
-    zip: station.zip,
-    city: station.city,
-    distance: station.distance,
-    price: station.price,
-    cash_price: station.cashPrice,
-    card_price: station.cardPrice,
-    rating: station.rating,
-    verified: station.verified,
-    phone: station.phone,
+    station_id: report.stationId,
+    reported_price: report.reportedPrice,
   };
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/stations`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/price_reports`, {
     method: "POST",
     headers: supabaseHeaders,
     body: JSON.stringify(payload),
   });
-  if (!response.ok) throw new Error("Failed to insert station into Supabase");
+
+  if (!response.ok) throw new Error("Failed to insert price report into Supabase");
+  const rows = await response.json();
+  return rows[0];
+}
+
+async function fetchMatchingPriceReports(stationId, reportedPrice) {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/price_reports?select=*&station_id=eq.${stationId}&reported_price=eq.${reportedPrice}`,
+    { headers: supabaseHeaders }
+  );
+
+  if (!response.ok) throw new Error("Failed to fetch matching price reports");
+  return response.json();
+}
+
+async function updateStationPriceInSupabase(stationId, newPrice) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/stations?id=eq.${stationId}`, {
+    method: "PATCH",
+    headers: supabaseHeaders,
+    body: JSON.stringify({
+      price: newPrice,
+      cash_price: newPrice,
+      card_price: newPrice,
+      updated_at: new Date().toISOString(),
+    }),
+  });
+
+  if (!response.ok) throw new Error("Failed to update station price");
   const rows = await response.json();
   return mapSupabaseStationToUi(rows[0]);
 }
@@ -113,8 +161,7 @@ function StationCard({ station, onReport, isCheapest }) {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
-        <div className="text-slate-600">📍 {station.distance} mi</div>
+      <div className="mt-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
         <div className="text-slate-600">💵 Cash ${station.cashPrice}</div>
         <div className="text-slate-600">⭐ {station.rating}</div>
         <div className="text-slate-600">🕒 {station.updatedAt}</div>
@@ -227,8 +274,9 @@ export default function App() {
   const [zip, setZip] = useState(getZipFromPath());
   const [sortBy, setSortBy] = useState("price");
   const [showReport, setShowReport] = useState(false);
+  const [selectedStation, setSelectedStation] = useState(null);
   const [stations, setStations] = useState(seedStations);
-  const [form, setForm] = useState({ stationName: "", price: "", address: "", cashPrice: "", cardPrice: "" });
+  const [form, setForm] = useState({ price: "" });
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState(isSupabaseEnabled ? "Supabase" : "Demo data");
@@ -281,6 +329,7 @@ export default function App() {
     }
   }, [stations]);
 
+
   const filtered = useMemo(() => {
     const searchText = zip.trim().toLowerCase();
     const list = stations.filter((station) => {
@@ -289,7 +338,6 @@ export default function App() {
       return station.zip.toLowerCase().includes(searchText) || station.city.toLowerCase().includes(searchText) || station.name.toLowerCase().includes(searchText);
     });
     return [...list].sort((a, b) => {
-      if (sortBy === "distance") return a.distance - b.distance;
       if (sortBy === "updated") return a.id - b.id;
       return a.price - b.price;
     });
@@ -297,48 +345,56 @@ export default function App() {
 
   const cheapest = filtered[0];
 
+  const openReportModal = (station) => {
+    setSelectedStation(station);
+    setForm({ price: "" });
+    setFormError("");
+    setShowReport(true);
+  };
+
   const submitReport = async (e) => {
     e.preventDefault();
     setFormError("");
-    const priceNumber = Number(form.price);
-    const cashPriceNumber = form.cashPrice ? Number(form.cashPrice) : priceNumber;
-    const cardPriceNumber = form.cardPrice ? Number(form.cardPrice) : priceNumber;
 
-    if (!form.stationName.trim() || !form.price) {
-      setFormError("Station name and price are required.");
+    const priceNumber = Number(form.price);
+
+    if (!selectedStation) {
+      setFormError("Please select a station first.");
       return;
     }
-    if (Number.isNaN(priceNumber) || priceNumber < 1 || priceNumber > 50) {
+
+    if (!form.price || Number.isNaN(priceNumber) || priceNumber < 1 || priceNumber > 50) {
       setFormError("Please enter a valid price between $1 and $50.");
       return;
     }
 
-    const newStation = {
-      id: Date.now(),
-      name: form.stationName.trim(),
-      address: form.address.trim() || "Address pending verification",
-      zip: zip || "",
-      city: "User Report",
-      distance: 0,
-      price: priceNumber,
-      cashPrice: cashPriceNumber,
-      cardPrice: cardPriceNumber,
-      rating: 0,
-      updatedAt: "Just now",
-      verified: false,
-      phone: "",
-    };
-
     try {
       setLoading(true);
+
       if (isSupabaseEnabled) {
-        const savedStation = await insertStationToSupabase(newStation);
-        setStations([savedStation, ...stations]);
-      } else {
-        setStations([newStation, ...stations]);
+        await insertPriceReportToSupabase({
+          stationId: selectedStation.id,
+          reportedPrice: priceNumber,
+        });
+
+        const matchingReports = await fetchMatchingPriceReports(selectedStation.id, priceNumber);
+
+        if (matchingReports.length >= 2) {
+          const updatedStation = await updateStationPriceInSupabase(selectedStation.id, priceNumber);
+          setStations((currentStations) =>
+            currentStations.map((station) =>
+              station.id === selectedStation.id ? updatedStation : station
+            )
+          );
+          setFormError("");
+          setShowReport(false);
+          setSelectedStation(null);
+          return;
+        }
       }
-      setForm({ stationName: "", price: "", address: "", cashPrice: "", cardPrice: "" });
-      setShowReport(false);
+
+      setFormError("Thanks! This price needs one more matching report before it updates.");
+      setForm({ price: "" });
     } catch (error) {
       console.error(error);
       setFormError("Could not save this report. Please try again.");
@@ -358,8 +414,12 @@ export default function App() {
               <div className="text-xs text-slate-500">Find cheap emissions testing · {dataSource}</div>
             </div>
           </div>
-          <button onClick={() => setShowReport(true)} disabled={loading} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60">
-            {loading ? "Saving..." : "+ Report Price"}
+          <button
+            onClick={() => document.getElementById("station-results")?.scrollIntoView({ behavior: "smooth" })}
+            disabled={loading}
+            className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+          >
+            Report a station price
           </button>
         </div>
       </header>
@@ -369,7 +429,7 @@ export default function App() {
           <div className="rounded-3xl bg-white p-6 shadow-sm md:p-10">
             <div className="mb-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">Emission prices near {zip}</div>
             <h1 className="text-4xl font-bold tracking-tight md:text-6xl">Find the cheapest emission test near {zip}.</h1>
-            <p className="mt-4 max-w-2xl text-lg text-slate-600">Compare local emission test prices by ZIP code. See cash price, card price, distance, and last updated time.</p>
+            <p className="mt-4 max-w-2xl text-lg text-slate-600">Compare local emission test prices by ZIP code. See cash price, card price, rating, and last updated time.</p>
             <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:flex-row">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-3 text-slate-400">🔎</span>
@@ -396,7 +456,7 @@ export default function App() {
               <>
                 <div className="mt-5 text-6xl font-bold">${cheapest.price}</div>
                 <div className="mt-3 text-xl font-semibold">{cheapest.name}</div>
-                <div className="mt-2 text-slate-300">{cheapest.distance} miles away · Updated {cheapest.updatedAt}</div>
+                <div className="mt-2 text-slate-300">Updated {cheapest.updatedAt}</div>
                 <button className="mt-6 rounded-xl bg-white px-5 py-3 font-semibold text-slate-900 hover:bg-slate-100">View Details</button>
               </>
             ) : (
@@ -405,22 +465,21 @@ export default function App() {
           </div>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[.95fr_1.05fr]">
+        <section id="station-results" className="mt-8 grid gap-6 lg:grid-cols-[.95fr_1.05fr]">
           <div>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-2xl font-bold">Nearby stations</h2>
-                {loading && <p className="text-sm text-slate-500">Loading latest prices...</p>}
+{loading && <p className="text-sm text-slate-500">Loading latest prices...</p>}
               </div>
               <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none">
                 <option value="price">Sort by price</option>
-                <option value="distance">Sort by distance</option>
                 <option value="updated">Sort by updated</option>
               </select>
             </div>
             <div className="space-y-4">
               {filtered.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-500">No stations found. Try another ZIP or report a new price.</div>}
-              {filtered.map((station) => <StationCard key={station.id} station={station} isCheapest={cheapest && station.id === cheapest.id} onReport={() => setShowReport(true)} />)}
+              {filtered.map((station) => <StationCard key={station.id} station={station} isCheapest={cheapest && station.id === cheapest.id} onReport={() => openReportModal(station)} />)}
             </div>
           </div>
 
@@ -450,17 +509,15 @@ export default function App() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <form onSubmit={submitReport} className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Report a price</h2>
-              <button type="button" onClick={() => setShowReport(false)} className="rounded-full p-2 hover:bg-slate-100">×</button>
+              <div>
+                <h2 className="text-2xl font-bold">Report a price</h2>
+                {selectedStation && <p className="mt-1 text-sm text-slate-500">{selectedStation.name}</p>}
+              </div>
+              <button type="button" onClick={() => { setShowReport(false); setSelectedStation(null); }} className="rounded-full p-2 hover:bg-slate-100">×</button>
             </div>
             <div className="mt-5 space-y-4">
-              <input value={form.stationName} onChange={(e) => setForm({ ...form, stationName: e.target.value })} placeholder="Station name" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
-              <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Main price, e.g. 18" type="number" min="1" max="50" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <input value={form.cashPrice} onChange={(e) => setForm({ ...form, cashPrice: e.target.value })} placeholder="Cash price optional" type="number" min="1" max="50" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
-                <input value={form.cardPrice} onChange={(e) => setForm({ ...form, cardPrice: e.target.value })} placeholder="Card price optional" type="number" min="1" max="50" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
-              </div>
-              <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Address optional" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
+              <input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="New price, e.g. 18" type="number" min="1" max="50" step="0.01" className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:ring-2 focus:ring-slate-900" />
+              <p className="text-sm text-slate-500">Only submit the latest price for this station. The main price updates after 2 matching reports.</p>
               {formError && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</p>}
               <button disabled={loading} className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">{loading ? "Submitting..." : "Submit Price"}</button>
             </div>

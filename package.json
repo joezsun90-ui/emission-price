@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "csv-parser": "^3.2.1",
+    "dotenv": "^17.4.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
