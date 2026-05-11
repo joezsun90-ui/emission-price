@@ -17,7 +17,6 @@ fs.createReadStream("stations_import.csv")
       address: row.address,
       zip: row.zip,
       city: row.city,
-      distance: Number(row.distance || 0),
       price: Number(row.price),
       cash_price: Number(row.cash_price || row.price),
       card_price: Number(row.card_price || row.price),

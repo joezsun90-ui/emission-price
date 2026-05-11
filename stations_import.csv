@@ -1,11 +1,68 @@
-name,address,zip,city,distance,price,cash_price,card_price,rating,verified,phone
-Emission First LLC,3833 Buford Dr,30519,Buford,5.20,14.99,14.99,15.99,4.8,TRUE,(678) 714-2223
-Herbert Automotive,3453 Lawrenceville-Suwanee Rd,30024,Suwanee,1.50,18.00,18.00,20.00,4.5,TRUE,(770) 945-1212
-Speedemissions,2144 Buford Hwy,30518,Buford,3.80,20.00,20.00,22.00,4.2,TRUE,(770) 614-4113
-Neighborhood Tire Pros,3210 Lawrenceville-Suwanee Rd,30024,Suwanee,0.80,25.00,25.00,25.00,4.6,TRUE,(770) 932-0222
-Suwanee Service Station,351 Peachtree Industrial Blvd,30024,Suwanee,2.10,25.00,25.00,25.00,4.4,TRUE,(770) 945-4200
-Dekra Emission Check,2780 Lawrenceville-Suwanee Rd,30024,Suwanee,2.50,25.00,25.00,25.00,4.7,TRUE,(770) 271-2224
-Quickie Emissions,1295 Satellite Blvd,30024,Suwanee,3.20,20.00,20.00,22.00,4.1,TRUE,(678) 546-7770
-Express Oil Change,410 W Pike St,30046,Lawrenceville,6.50,25.00,25.00,25.00,4.5,TRUE,(770) 962-9210
-Emissions Plus,1342 Old Peachtree Rd NW,30024,Suwanee,2.90,25.00,25.00,25.00,4.3,TRUE,(770) 814-7221
-Japanese Auto Repair,444-A Old Peachtree Rd NW,30024,Suwanee,3.50,25.00,25.00,25.00,4.9,TRUE,(770) 232-0202
+name,address,zip,city,price,cash_price,card_price,rating,verified,phone
+Herbert Automotive,3453 Lawrenceville-Suwanee Rd,30024,Suwanee,18,18,20,4.5,TRUE,(770) 945-1212
+Speedemissions,2144 Buford Hwy,30518,Buford,20,20,22,4.2,TRUE,(770) 614-4113
+Neighborhood Tire Pros,3210 Lawrenceville-Suwanee Rd,30024,Suwanee,25,25,25,4.6,TRUE,(770) 932-0222
+Suwanee Service Station,351 Peachtree Industrial Blvd,30024,Suwanee,25,25,25,4.4,TRUE,(770) 945-4200
+Dekra Emission Check,2780 Lawrenceville-Suwanee Rd,30024,Suwanee,25,25,25,4.7,TRUE,(770) 271-2224
+Quickie Emissions,1295 Satellite Blvd,30024,Suwanee,20,20,22,4.1,TRUE,(678) 546-7770
+Express Oil Change,410 W Pike St,30046,Lawrenceville,25,25,25,4.5,TRUE,(770) 962-9210
+Emissions Plus,1342 Old Peachtree Rd NW,30024,Suwanee,25,25,25,4.3,TRUE,(770) 814-7221
+Japanese Auto Repair,444-A Old Peachtree Rd NW,30024,Suwanee,25,25,25,4.9,TRUE,(770) 232-0202
+Discount Emission,10020 GA-9,30004,Alpharetta,15,15,17,4.6,TRUE,(678) 366-3353
+Emissions Only,12635 Crabapple Rd,30004,Alpharetta,18,18,20,4.8,TRUE,(770) 751-1440
+Milton Emission Center,12850 Hwy 9 N,30004,Milton,18,18,20,4.5,TRUE,(678) 555-0101
+Super Shine Express,1000 Highway 9 N,30004,Alpharetta,19.99,19.99,19.99,4.5,TRUE,(770) 521-1234
+Deerfield Emissions,13085 Morris Rd,30004,Alpharetta,20,20,22,4.7,TRUE,(678) 867-0020
+Milton Auto Care,12990 Hwy 9 N,30004,Milton,20,20,20,4.4,TRUE,(770) 555-0210
+Quality Emissions,1000 N Main St,30004,Alpharetta,20,20,21,4.3,TRUE,(678) 555-9988
+Crabapple Automotive,12460 Crabapple Rd,30004,Alpharetta,25,25,25,4.8,TRUE,(770) 667-5432
+Express Oil Change,12820 GA-9,30004,Alpharetta,25,25,25,4.4,TRUE,(770) 754-0552
+Alpharetta Tire & Auto,12830 GA-9,30004,Alpharetta,25,25,25,4.2,TRUE,(770) 751-0111
+Jones Bridge Emissions,10900 Jones Bridge Rd,30005,Johns Creek,18,18,20,4.4,TRUE,(770) 555-0104
+Clean Air Station,4310 Johns Creek Pkwy,30005,Suwanee,20,20,22,4.7,TRUE,(678) 555-0105
+McGinnis Ferry Emissions,5202 McGinnis Ferry Rd,30005,Alpharetta,20,20,22,4.6,TRUE,(770) 555-0222
+Windward Emissions,5420 Windward Pkwy,30005,Alpharetta,20,20,20,4.3,TRUE,(678) 555-9000
+Medlock Bridge Emissions,10000 Medlock Bridge Rd,30097,Johns Creek,20,20,22,4.4,TRUE,(770) 555-1097
+Abbotts Bridge Emissions,10911 Abbotts Bridge Rd,30097,Johns Creek,20,20,22,4.2,TRUE,(770) 555-4455
+Webb Bridge Emissions,4500 Webb Bridge Rd,30005,Alpharetta,20,20,21,4.4,TRUE,(770) 555-5566
+Johns Creek Auto Care,11705 Jones Bridge Rd,30005,Johns Creek,25,25,25,4.5,TRUE,(770) 475-4700
+Express Oil Change,11665 Jones Bridge Rd,30005,Johns Creek,25,25,25,4.6,TRUE,(770) 555-2233
+Main Street Emissions,660 N Main St,30009,Alpharetta,20,20,20,4.3,TRUE,(770) 475-0155
+Wills Park Emissions,175 Old Milton Pkwy,30009,Alpharetta,20,20,22,4.1,TRUE,(770) 555-0199
+Alpharetta Auto Emissions,200 S Main St,30009,Alpharetta,20,20,21,4.4,TRUE,(770) 555-0333
+Old Milton Emissions,450 Old Milton Pkwy,30009,Alpharetta,20,20,20,4.5,TRUE,(770) 555-0444
+Downtown Alpharetta Emissions,120 N Main St,30009,Alpharetta,22,22,23,4.2,TRUE,(770) 555-0555
+Express Oil Change,155 S Main St,30009,Alpharetta,25,25,25,4.6,TRUE,(770) 475-9494
+Milton Automotive,350 Mid Broadwell Rd,30009,Alpharetta,25,25,25,4.7,TRUE,(770) 555-0666
+Precision Tune Auto Care,142 S Main St,30009,Alpharetta,25,25,25,4.1,TRUE,(770) 475-1044
+Chevron Emissions,100 Old Milton Pkwy,30009,Alpharetta,25,25,25,4,TRUE,(770) 555-0777
+Happy Birthday Emissions,1570 Holcomb Bridge Rd,30022,Roswell,15,15,17,4.7,TRUE,(770) 645-1212
+Holcomb Bridge Emissions,1580 Holcomb Bridge Rd,30022,Roswell,18,18,20,4.5,TRUE,(770) 555-0222
+Johns Creek Emissions Plus,10945 State Bridge Rd,30022,Johns Creek,18,18,20,4.5,TRUE,(770) 555-3344
+Haynes Bridge Emissions,9945 Haynes Bridge Rd,30022,Alpharetta,20,20,20,4.6,TRUE,(770) 555-0188
+Mansell Road Emissions,2555 Mansell Rd,30022,Alpharetta,20,20,22,4.3,TRUE,(770) 555-0888
+Old Alabama Emissions,8465 Holcomb Bridge Rd,30022,Alpharetta,20,20,21,4.4,TRUE,(770) 555-0999
+Nesbit Ferry Emissions,9700 Medlock Bridge Rd,30022,Johns Creek,20,20,22,4.2,TRUE,(770) 555-1122
+Express Oil Change,3005 Holcomb Bridge Rd,30022,Alpharetta,25,25,25,4.5,TRUE,(770) 642-0056
+North Point Emissions,1005 North Point Cir,30022,Alpharetta,25,25,25,4.1,TRUE,(770) 555-1234
+Roswell Auto Care,11050 Alpharetta Hwy,30076,Roswell,25,25,25,4.6,TRUE,(770) 993-4560
+Collins Hill Emissions,700 Collins Hill Rd,30043,Lawrenceville,15,15,16,4.8,TRUE,(770) 555-0043
+Russell Rd Emissions,1300 Russell Rd,30043,Lawrenceville,18,18,20,4.4,TRUE,(770) 555-1043
+Riverside Emissions,1100 Riverside Pkwy,30043,Lawrenceville,18,18,20,4.5,TRUE,(770) 555-2043
+Grease Monkey,1340 Lawrenceville-Suwanee Rd,30043,Lawrenceville,20,20,20,4.2,TRUE,(770) 338-7706
+Speedemissions,1032 Old Peachtree Rd NW,30043,Lawrenceville,20,20,22,4.1,TRUE,(770) 555-3043
+Old Peachtree Emissions,1455 Old Peachtree Rd,30043,Lawrenceville,20,20,21,4.4,TRUE,(770) 555-4043
+Sugarloaf Mills Emissions,5900 Sugarloaf Pkwy,30043,Lawrenceville,20,20,22,4.3,TRUE,(770) 555-5043
+Express Oil Change,1445 Herrington Rd,30043,Lawrenceville,25,25,25,4.5,TRUE,(770) 339-4455
+Tire Pros,1105 Lawrenceville-Suwanee Rd,30043,Lawrenceville,25,25,25,4.6,TRUE,(770) 555-6043
+Christian Brothers Automotive,1305 Old Peachtree Rd NW,30043,Lawrenceville,25,25,25,4.7,TRUE,(678) 555-7043
+Double A Emissions,1502 Pleasant Hill Rd,30096,Duluth,18,18,20,4.3,TRUE,(678) 395-4756
+Ozone Emission Inc,3635 Buford Hwy,30096,Duluth,18,18,20,4.4,TRUE,(770) 674-4004
+Cason Emissions Testing Center,3505 Buford Hwy,30096,Duluth,20,20,20,4.4,TRUE,(770) 495-7736
+Pleasant Hill Car Wash & Lube,2443 Pleasant Hill Rd,30096,Duluth,20,20,22,3.7,TRUE,(770) 622-6030
+Precision Tune Auto Care,3535 Satellite Blvd,30096,Duluth,20,20,21,4.5,TRUE,(770) 476-1078
+Speedy Emission,259 Scenic Hwy S,30046,Lawrenceville,15,15,17,4.7,TRUE,(770) 236-8902
+A1 Emissions Testing,1108 Herrington Rd #4,30044,Lawrenceville,18,18,20,4.9,TRUE,(678) 377-0887
+MZS Emission,2110 GA-120,30097,Duluth,20,20,22,4.5,TRUE,(770) 497-1449
+Grease Monkey,2350 Satellite Blvd NW,30097,Duluth,20,20,20,4.7,TRUE,(678) 473-1670
+Ozone Emission Inc,2880 Peachtree Industrial Blvd,30097,Duluth,20,20,20,4.7,TRUE,(470) 292-3742

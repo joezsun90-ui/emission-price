@@ -1,0 +1,14 @@
+node importStations.js
+
+
+cd C:\Users\joe.sun\emission-price
+
+git add .
+git commit -m "sync latest app code"
+git push
+
+
+cd C:\Users\joe.sun\emission-price
+npm run dev
+
+
